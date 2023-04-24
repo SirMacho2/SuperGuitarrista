@@ -1,0 +1,10 @@
+[objects]
+src/main.obj
+src/menu.obj
+src/translate.obj
+data.obj
+hdr.obj
+/home/linhares/pvsneslib/pvsneslib/lib/crt0_snes.obj
+/home/linhares/pvsneslib/pvsneslib/lib/libc.obj
+/home/linhares/pvsneslib/pvsneslib/lib/libm.obj
+/home/linhares/pvsneslib/pvsneslib/lib/libtcc.obj

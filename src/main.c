@@ -11,6 +11,8 @@
 #include "translate.h"
 #include <stdio.h>
 
+#include "lib/sprite_s.h"
+
 enum States
 {
     CREDITOS,
@@ -39,8 +41,15 @@ extern char bg_musica_map, bg_musica_map_end;
 
 extern char tilfont, palfont;
 
-extern char btY_gfx, btY_gfx_end;
-extern char btY_pal, btY_pal_end;
+extern char bt_f1_gfx, bt_f1_gfx_end;
+extern char bt_f1_pal, bt_f1_pal_end;
+
+extern char bt_f2_gfx, bt_f2_gfx_end;
+extern char bt_f2_pal, bt_f2_pal_end;
+
+Sprite nota;
+
+AnimationFrame nota_f[2];
 
 void setFontColour(u16 color)
 {
@@ -225,59 +234,79 @@ int main(void)
                 setFadeEffect(FADE_IN);
 
                 // Init Sprites gfx and palette with default size of 16x16
-                oamInitGfxSet(&btY_gfx, (&btY_gfx_end - &btY_gfx),
-                              &btY_pal, (&btY_pal_end - &btY_pal), 0, 0x2000, OBJ_SIZE8_L16);
+                oamInitGfxSet(&bt_f1_gfx, (&bt_f1_gfx_end - &bt_f1_gfx),
+                              &bt_f1_pal, (&bt_f1_pal_end - &bt_f1_pal), 0, 0x2000, OBJ_SIZE8_L32);
+
+                // clear bg1
+                VDP_clearTextArea(0, 0, 32, 28);
 
                 // Define sprites parameters
-                oamSet(0, sprite_x, sprite_y, 0, 0, 0, 0, 0);
+                oamSet(0, sprite_x, sprite_y, 3, 0, 0, 0, 0);
                 oamSetEx(0, OBJ_LARGE, OBJ_SHOW);
                 oamSetVisible(0, OBJ_SHOW);
 
-                oamSet(4, sprite_x + 8, sprite_y, 0, 0, 0, 1, 0);
-                oamSetEx(4, OBJ_LARGE, OBJ_SHOW);
-                oamSetVisible(4, OBJ_SHOW);
+                nota_f[0].tilset = &bt_f1_gfx;
+                nota_f[0].tilesetLen = (&bt_f1_gfx_end - &bt_f1_gfx);
 
-                oamSet(8, sprite_x + 8, sprite_y, 0, 0, 0, 2, 0);
-                oamSetEx(8, OBJ_LARGE, OBJ_SHOW);
-                oamSetVisible(8, OBJ_SHOW);
+                consoleNocashMessage("tileset addres %p, size: %u\n", nota_f[0].tilset, nota_f[0].tilesetLen);
+
+                nota_f[1].tilset = &bt_f2_gfx;
+                nota_f[1].tilesetLen = (&bt_f2_gfx_end - &bt_f2_gfx);
+
+                nota.frame = nota_f;
+                nota.x = sprite_x;
+                nota.y = sprite_y;
+                nota.framesLen = 2;
+                nota.depth = 3;
+
+                consoleNocashMessage("2 -tileset addres %p, size: %u\n", nota.frame[0].tilset, nota.frame[0].tilesetLen);
             }
             else
             {
+                s8 key_pressed = 0;
                 if (pad0 & KEY_DOWN)
                 {
                     sprite_y++;
+                    key_pressed = 1;
                 }
                 else if (pad0 & KEY_UP)
                 {
                     sprite_y--;
+                    key_pressed = 1;
                 }
                 if (pad0 & KEY_RIGHT)
                 {
                     sprite_x++;
+                    key_pressed = 1;
                 }
                 else if (pad0 & KEY_LEFT)
                 {
                     sprite_x--;
+                    key_pressed = 1;
                 }
                 if (pad0 & KEY_A)
                 {
                     sprite_offset++;
+                    key_pressed = 1;
                 }
                 if (pad0 & KEY_B)
                 {
                     sprite_offset--;
+                    key_pressed = 1;
                 }
-                if (sprite_y > 20)
+                nota.x = sprite_x;
+                nota.y = sprite_y;
+                if (key_pressed == 1)
                 {
-                    oamSet(0, sprite_x, sprite_y, 3, 0, 0, 3, 0);
-                    oamSet(4, sprite_x + 8, sprite_y, 3, 0, 0, 4, 0);
-                    oamSet(8, sprite_x + 16, sprite_y, 3, 0, 0, 5, 0);
-                }
-                else
-                {
-                    oamSet(0, sprite_x, sprite_y, 3, 0, 0, 0, 0);
-                    oamSet(4, sprite_x + 8, sprite_y, 3, 0, 0, 1, 0);
-                    oamSet(8, sprite_x + 16, sprite_y, 3, 0, 0, 2, 0);
+                    if (sprite_y > 20)
+                    {
+
+                        SPR_changeFrame(&nota, 0, 0x4000);
+                    }
+                    else
+                    {
+                        SPR_changeFrame(&nota, 1, 0x4000);
+                    }
                 }
             }
             break;

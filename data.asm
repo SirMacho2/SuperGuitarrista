@@ -71,14 +71,22 @@ bg_musica_patterns_end:
 .ends
 
 
-.section ".rodata5" superfree
+.section ".bts" superfree
 
-btY_gfx:
-.incbin "res/bt/bt0.pic"
-btY_gfx_end:
+bt_f1_gfx:
+.incbin "res/bt/bt_frame1.pic"
+bt_f1_gfx_end:
 
-btY_pal:
-.incbin "res/bt/bt0.pal"
-btY_pal_end:
+bt_f1_pal:
+.incbin "res/bt/bt_frame1.pal"
+bt_f1_pal_end:
+
+bt_f2_gfx:
+.incbin "res/bt/bt_frame2.pic"
+bt_f2_gfx_end:
+
+bt_f2_pal:
+.incbin "res/bt/bt_frame2.pal"
+bt_f2_pal_end:
 
 .ends

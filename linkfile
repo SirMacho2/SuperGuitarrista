@@ -2,9 +2,10 @@
 src/main.obj
 src/menu.obj
 src/translate.obj
+src/lib/sprite_s.obj
 data.obj
 hdr.obj
-/home/linhares/pvsneslib/pvsneslib/lib/crt0_snes.obj
-/home/linhares/pvsneslib/pvsneslib/lib/libc.obj
-/home/linhares/pvsneslib/pvsneslib/lib/libm.obj
-/home/linhares/pvsneslib/pvsneslib/lib/libtcc.obj
+c:\pvsneslib\pvsneslib\lib/crt0_snes.obj
+c:\pvsneslib\pvsneslib\lib/libc.obj
+c:\pvsneslib\pvsneslib\lib/libm.obj
+c:\pvsneslib\pvsneslib\lib/libtcc.obj

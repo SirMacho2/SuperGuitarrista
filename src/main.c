@@ -10,6 +10,7 @@
 #include "menu.h"
 #include "translate.h"
 #include <stdio.h>
+#include "commun.h"
 
 enum States
 {
@@ -224,61 +225,61 @@ int main(void)
                              SC_32x32, 0x0000);
                 setFadeEffect(FADE_IN);
 
-                // Init Sprites gfx and palette with default size of 16x16
-                oamInitGfxSet(&btY_gfx, (&btY_gfx_end - &btY_gfx),
-                              &btY_pal, (&btY_pal_end - &btY_pal), 0, 0x2000, OBJ_SIZE8_L16);
+                VDP_clearTextArea(0, 0, 32, 28);
 
-                // Define sprites parameters
-                oamSet(0, sprite_x, sprite_y, 0, 0, 0, 0, 0);
-                oamSetEx(0, OBJ_LARGE, OBJ_SHOW);
-                oamSetVisible(0, OBJ_SHOW);
+                oamInitDynamicSprite(0x2000, 0x2000, 0x2000, 0x2000, OBJ_SIZE8_L32);
 
-                oamSet(4, sprite_x + 8, sprite_y, 0, 0, 0, 1, 0);
-                oamSetEx(4, OBJ_LARGE, OBJ_SHOW);
-                oamSetVisible(4, OBJ_SHOW);
+                oambuffer[0].oamx = sprite_x;
+                oambuffer[0].oamy = sprite_y;
+                oambuffer[0].oamframeid = 0;
+                oambuffer[0].oamrefresh = 1;
 
-                oamSet(8, sprite_x + 8, sprite_y, 0, 0, 0, 2, 0);
-                oamSetEx(8, OBJ_LARGE, OBJ_SHOW);
-                oamSetVisible(8, OBJ_SHOW);
+                SpriteAttr teste;
+                teste.pallNum = 0;
+                teste.priority = 2;
+                teste.vflip = 0;
+                teste.lastBit = 0;
+                teste.hflip = 0;
+                consoleDrawText(1, 1, " attr : %u", teste);
+
+                oambuffer[0].oamattribute = (u8)teste; // palette 0 of sprite and sprite 16x16 and priority 2
+                oambuffer[0].oamgraphics = &btY_gfx;
+                oamDynamic32Draw(0);
+
+                setPalette(&btY_pal, 16 * 8, (&btY_pal_end - &btY_pal));
             }
             else
             {
                 if (pad0 & KEY_DOWN)
                 {
                     sprite_y++;
+                    oambuffer[0].oamrefresh = 1;
                 }
                 else if (pad0 & KEY_UP)
                 {
                     sprite_y--;
+                    oambuffer[0].oamrefresh = 1;
                 }
                 if (pad0 & KEY_RIGHT)
                 {
                     sprite_x++;
+                    oambuffer[0].oamrefresh = 1;
                 }
                 else if (pad0 & KEY_LEFT)
                 {
                     sprite_x--;
+                    oambuffer[0].oamrefresh = 1;
                 }
-                if (pad0 & KEY_A)
+                if (sprite_y > 70)
                 {
-                    sprite_offset++;
+                    oambuffer[0].oamframeid = (sprite_y - 70) / 20;
+                    oambuffer[0].oamrefresh = 1;
                 }
-                if (pad0 & KEY_B)
-                {
-                    sprite_offset--;
-                }
-                if (sprite_y > 20)
-                {
-                    oamSet(0, sprite_x, sprite_y, 3, 0, 0, 3, 0);
-                    oamSet(4, sprite_x + 8, sprite_y, 3, 0, 0, 4, 0);
-                    oamSet(8, sprite_x + 16, sprite_y, 3, 0, 0, 5, 0);
-                }
-                else
-                {
-                    oamSet(0, sprite_x, sprite_y, 3, 0, 0, 0, 0);
-                    oamSet(4, sprite_x + 8, sprite_y, 3, 0, 0, 1, 0);
-                    oamSet(8, sprite_x + 16, sprite_y, 3, 0, 0, 2, 0);
-                }
+                oambuffer[0].oamx = sprite_x;
+                oambuffer[0].oamy = sprite_y;
+                oamDynamic32Draw(0);
+                oamInitDynamicSpriteEndFrame();
+                oamVramQueueUpdate();
             }
             break;
         }

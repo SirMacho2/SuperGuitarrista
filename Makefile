@@ -35,9 +35,9 @@ pvsneslibfont.pic: pvsneslibfont.png
 	@echo convert font with no tile reduction ... $(notdir $@)
 	$(GFXCONV) -n -gs8 -po16 -pc16 -pe2 -mR! -m! -fpng $<
 
-btY.pic: res/bt/bt0.png
+btY.pic: res/bt/bt32x32.png
 	@echo convert bitmap ... $(notdir $@)
-	$(GFXCONV) -gs16 -pc16 -po16 -n -fpng $<
+	$(GFXCONV) -gs32 -pc16 -po16 -n -fpng $<
 
 
 bitmaps : creditos.pic k7.pic concert.pic bg_musica.pic pvsneslibfont.pic btY.pic

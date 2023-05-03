@@ -74,11 +74,11 @@ bg_musica_patterns_end:
 .section ".rodata5" superfree
 
 btY_gfx:
-.incbin "res/bt/bt0.pic"
+.incbin "res/bt/bt32x32.pic"
 btY_gfx_end:
 
 btY_pal:
-.incbin "res/bt/bt0.pal"
+.incbin "res/bt/bt32x32.pal"
 btY_pal_end:
 
 .ends

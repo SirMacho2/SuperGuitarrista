@@ -17,7 +17,7 @@ s16 VDP_clearTextArea(s16 x, s16 y, u8 width, u8 height)
     {
         u8 i;
         text[width] = '\0';
-        for (i = 0; i < height; i++)
+        for (i = y; i < (y + height); i++)
         {
             consoleDrawText(x, y + i, text);
         }

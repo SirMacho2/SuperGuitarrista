@@ -2,11 +2,10 @@
 #define __MENU_H__
 
 #include <snes.h>
-// #include "musicas.h"
+#include "musicas.h"
 
 #define NUM_OPCOES_PAUSA 3
 #define NUM_OPCOES_FIM 3
-#define NUM_MUSICAS 10
 
 // define a estrutura das opções
 typedef struct

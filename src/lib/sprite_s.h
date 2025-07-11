@@ -26,6 +26,9 @@ typedef struct Sprite
     u16 framesLen;
 } Sprite;
 
-s8 SPR_changeFrame(Sprite *s, s16 frameNumber, u16 address);
+void SPR_setFrame(u8 idx, u16 frameNumber);
+void SPR_release(u8 idx);
+s8 SPR_add(s16 oamx, s16 oamy, u8 oamattribute, u8 *tileset);
+void SPR_update();
 
 #endif

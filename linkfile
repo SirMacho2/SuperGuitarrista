@@ -1,11 +1,13 @@
 [objects]
+src/lista.obj
 src/main.obj
 src/menu.obj
+src/musicas.obj
 src/translate.obj
 src/lib/sprite_s.obj
 data.obj
 hdr.obj
-c:\pvsneslib\pvsneslib\lib/crt0_snes.obj
-c:\pvsneslib\pvsneslib\lib/libc.obj
-c:\pvsneslib\pvsneslib\lib/libm.obj
-c:\pvsneslib\pvsneslib\lib/libtcc.obj
+c:\pvsneslib\pvsneslib\lib\LoROM_SlowROM/crt0_snes.obj
+c:\pvsneslib\pvsneslib\lib\LoROM_SlowROM/libc.obj
+c:\pvsneslib\pvsneslib\lib\LoROM_SlowROM/libm.obj
+c:\pvsneslib\pvsneslib\lib\LoROM_SlowROM/libtcc.obj

@@ -6,10 +6,12 @@
 
 
 ---------------------------------------------------------------------------------*/
-#include <snes.h>
 #include "menu.h"
 #include "translate.h"
 #include <stdio.h>
+#include "commun.h"
+#include "musicas.h"
+#include "lista.h"
 
 #include "lib/sprite_s.h"
 
@@ -22,6 +24,9 @@ enum States
     PAUSA,
     FIM_MUSICA,
 };
+
+#define SPRNUMBER 5
+#define ALTURA_PISTA 62
 
 extern char k7_patterns, k7_patterns_end;
 extern char k7_palette, k7_palette_end;
@@ -39,17 +44,37 @@ extern char bg_musica_patterns, bg_musica_patterns_end;
 extern char bg_musica_palette, bg_musica_palette_end;
 extern char bg_musica_map, bg_musica_map_end;
 
+extern char vu2_patterns, vu2_end;
+extern char vu2_palette, vu2_palette_end;
+// extern char vu2_map, vu2_map_end;
+
 extern char tilfont, palfont;
 
 extern char bt_f1_gfx, bt_f1_gfx_end;
 extern char bt_f1_pal, bt_f1_pal_end;
-
-extern char bt_f2_gfx, bt_f2_gfx_end;
 extern char bt_f2_pal, bt_f2_pal_end;
+extern char bt_f3_pal, bt_f3_pal_end;
 
 Sprite nota;
 
 AnimationFrame nota_f[2];
+bool doDMAQUEUE;
+u32 frame;
+
+u16 Hudmap[32][32];
+
+const Nota *notas;
+const u32 *tempos;
+const u16 *duracoes;
+u16 tamanho_musica;
+u8 velocidade;
+const u8 *musica_xgm;
+u16 delay;
+u8 loops;
+
+Musica musica = BACK_IN_BLACK;
+
+bool notas_faltando = 1;
 
 void setFontColour(u16 color)
 {
@@ -62,9 +87,11 @@ void setFontColour(u16 color)
     setPalette((unsigned char *)palfont2, 32, 32);
 }
 
+u8 i;
 //---------------------------------------------------------------------------------
 int main(void)
 {
+    doDMAQUEUE = FALSE;
 
     enum States state = CREDITOS;
     enum States state_anterior = -1;
@@ -72,8 +99,8 @@ int main(void)
     consoleInit();
 
     // Initialize text console with our font
-    consoleSetTextVramBGAdr(0x6800);
-    consoleSetTextVramAdr(0x3000);
+    consoleSetTextGfxPtr(0x6800);
+    consoleSetTextMapPtr(0x3000);
     consoleSetTextOffset(0x0100);
 
     consoleInitText(2, 16 * 2, &tilfont, (unsigned char *)palfont);
@@ -98,10 +125,23 @@ int main(void)
     u16 sprite_y = 0;
 
     u16 sprite_offset = 0;
+
+    s16 placar = 0;
+    s8 consecutivas = 0;
+    u8 multiplicador = 1;
+    bool perdeu = FALSE;
+
+    u32 init_time = getTick();
+    u32 pause_time = 0;
+    u32 final_time = 0xFFFFFFFF;
+    bool start_music = 0;
+    bool notas_faltando = 1;
+    u16 nota_index = 0;
+    bool resume = 0;
+
+    frame = 0;
     while (1)
     {
-        // Refresh pad values
-        scanPads();
 
         // Get current #0 pad
         pad0 = padsCurrent(0);
@@ -214,6 +254,49 @@ int main(void)
             {
                 state = MUSICA;
                 // SPR_releaseSprite(cursor);
+
+                if (cursorY == 0)
+                {
+                    musica = SONIC;
+                }
+                // select back in black
+                else if (cursorY == 1)
+                {
+                    musica = BACK_IN_BLACK;
+                }
+                else if (cursorY == 2)
+                {
+                    musica = STREETS_OF_RAGE;
+                }
+                else if (cursorY == 3)
+                {
+                    musica = GUILE_THEME;
+                }
+                else if (cursorY == 4)
+                {
+                    musica = ZELDA;
+                }
+                else if (cursorY == 5)
+                {
+                    musica = DRACULA;
+                }
+                else if (cursorY == 6)
+                {
+                    musica = TOP_GEAR;
+                }
+                else if (cursorY == 7)
+                {
+                    musica = ALTERED;
+                }
+                else if (cursorY == 8)
+                {
+                    musica = SMOOTH;
+                }
+                else if (cursorY == 9)
+                {
+                    musica = PHATASY;
+                }
+
                 VDP_clearTextLine(opcoes_musicas[cursorY].y);
                 setFadeEffect(FADE_OUT);
                 bgSetScroll(1, 0, 0);
@@ -223,96 +306,237 @@ int main(void)
             if (state_anterior != state)
             {
                 state_anterior = state;
+
+                setMode(BG_MODE1, BG3_MODE1_PRIORITY_HIGH);
+                bgSetDisable(3);
                 // Copy tiles to VRAM
                 bgInitTileSet(1, &bg_musica_patterns, &bg_musica_palette, 0,
                               (&bg_musica_patterns_end - &bg_musica_patterns),
                               (&bg_musica_palette_end - &bg_musica_palette), BG_16COLORS, 0x4000);
 
+                // WaitForVBlank();
+                bgInitTileSet(0, &vu2_patterns, &vu2_palette, 2, 1824, 16 * 2, BG_16COLORS, 0x6000);
+
                 // Copy Map to VRAM
                 bgInitMapSet(1, &bg_musica_map, (&bg_musica_map_end - &bg_musica_map),
                              SC_32x32, 0x0000);
+
+                bgSetMapPtr(0, 0x0000 + 2048, SC_32x32);
+
+                int i, j;
+                for (i = 0; i < 11; i++)
+                {
+                    for (j = 0; j < 11; j++)
+                    {
+                        Hudmap[i][j] = 0x2804;
+                    }
+                }
+                dmaCopyVram((u8 *)Hudmap, 0x0000 + 2048, 0x400);
                 setFadeEffect(FADE_IN);
 
-                // Init Sprites gfx and palette with default size of 16x16
-                oamInitGfxSet(&bt_f1_gfx, (&bt_f1_gfx_end - &bt_f1_gfx),
-                              &bt_f1_pal, (&bt_f1_pal_end - &bt_f1_pal), 0, 0x2000, OBJ_SIZE8_L32);
+                oamInitDynamicSprite(0x2000, 0x1000, 0, 0, OBJ_SIZE8_L32);
+                // Init Sprites palette
+                setPalette(&bt_f1_pal, 128 + 0 * 16, 16 * 2);
 
-                // clear bg1
-                VDP_clearTextArea(0, 0, 32, 28);
+                setPalette(&bt_f2_pal, 128 + 1 * 16, 16 * 2);
+                setPalette(&bt_f3_pal, 128 + 2 * 16, 16 * 2);
 
-                // Define sprites parameters
-                oamSet(0, sprite_x, sprite_y, 3, 0, 0, 0, 0);
-                oamSetEx(0, OBJ_LARGE, OBJ_SHOW);
-                oamSetVisible(0, OBJ_SHOW);
+                // // clear bg1
+                // VDP_clearTextArea(0, 0, 32, 28);
+                // bgSetDisable(0);
+                SPR_init();
 
-                nota_f[0].tilset = &bt_f1_gfx;
-                nota_f[0].tilesetLen = (&bt_f1_gfx_end - &bt_f1_gfx);
+                CriaLista_Nota();
 
-                consoleNocashMessage("tileset addres %p, size: %u\n", nota_f[0].tilset, nota_f[0].tilesetLen);
+                switch (musica)
+                {
+                case SONIC:
+                    notas = notas_sonic;
+                    tempos = tempos_sonic;
+                    tamanho_musica = tamanho_sonic;
+                    velocidade = velocidade_sonic;
+                    duracoes = duracao_sonic;
+                    // musica_xgm = sonic_music;
+                    delay = delay_sonic;
+                    loops = loops_sonic;
+                    break;
 
-                nota_f[1].tilset = &bt_f2_gfx;
-                nota_f[1].tilesetLen = (&bt_f2_gfx_end - &bt_f2_gfx);
+                case BACK_IN_BLACK:
+                    notas = notas_bib;
+                    tempos = tempos_bib;
+                    tamanho_musica = tamanho_bib;
+                    velocidade = velocidade_bib;
+                    duracoes = duracao_bib;
+                    // musica_xgm = back_music;
+                    delay = delay_bib;
+                    loops = loops_bib;
+                    break;
 
-                nota.frame = nota_f;
-                nota.x = sprite_x;
-                nota.y = sprite_y;
-                nota.framesLen = 2;
-                nota.depth = 3;
+                case STREETS_OF_RAGE:
+                    notas = notas_sor;
+                    tempos = tempos_sor;
+                    tamanho_musica = tamanho_sor;
+                    velocidade = velocidade_sor;
+                    duracoes = duracao_sor;
+                    // musica_xgm = sor_music;
+                    delay = delay_sor;
+                    loops = loops_sor;
+                    break;
 
-                consoleNocashMessage("2 -tileset addres %p, size: %u\n", nota.frame[0].tilset, nota.frame[0].tilesetLen);
+                case GUILE_THEME:
+                    notas = notas_guile;
+                    tempos = tempos_guile;
+                    tamanho_musica = tamanho_guile;
+                    velocidade = velocidade_guile;
+                    duracoes = duracao_guile;
+                    // musica_xgm = guile_music;
+                    delay = delay_guile;
+                    loops = loops_guile;
+                    break;
+
+                case ZELDA:
+                    notas = notas_zelda;
+                    tempos = tempos_zelda;
+                    tamanho_musica = tamanho_zelda;
+                    velocidade = velocidade_zelda;
+                    duracoes = duracao_zelda;
+                    // musica_xgm = zelda_music;
+                    delay = delay_zelda;
+                    loops = loops_zelda;
+                    break;
+
+                case DRACULA:
+                    notas = notas_castle;
+                    tempos = tempos_castle;
+                    tamanho_musica = tamanho_castle;
+                    velocidade = velocidade_castle;
+                    duracoes = duracao_castle;
+                    // musica_xgm = castle_music;
+                    delay = delay_castle;
+                    loops = loops_castle;
+                    break;
+
+                case TOP_GEAR:
+                    notas = notas_topGear;
+                    tempos = tempos_topGear;
+                    tamanho_musica = tamanho_topGear;
+                    velocidade = velocidade_topGear;
+                    duracoes = duracao_topGear;
+                    // musica_xgm = topGear_music;
+                    delay = delay_topGear;
+                    loops = loops_topGear;
+                    break;
+
+                case ALTERED:
+                    notas = notas_ateredBeast;
+                    tempos = tempos_ateredBeast;
+                    tamanho_musica = tamanho_ateredBeast;
+                    velocidade = velocidade_ateredBeast;
+                    duracoes = duracao_ateredBeast;
+                    // musica_xgm = ateredBeast_music;
+                    delay = delay_ateredBeast;
+                    loops = loops_ateredBeast;
+                    break;
+
+                case SMOOTH:
+                    notas = notas_smooth;
+                    tempos = tempos_smooth;
+                    tamanho_musica = tamanho_smooth;
+                    velocidade = velocidade_smooth;
+                    duracoes = duracao_smooth;
+                    // musica_xgm = smooth_music;
+                    delay = delay_smooth;
+                    loops = loops_smooth;
+                    break;
+
+                case PHATASY:
+                    notas = notas_phantasy;
+                    tempos = tempos_phantasy;
+                    tamanho_musica = tamanho_phantasy;
+                    velocidade = velocidade_phantasy;
+                    duracoes = duracao_phantasy;
+                    // musica_xgm = phantasy_music;
+                    delay = delay_phantasy;
+                    loops = loops_phantasy;
+                    break;
+
+                default:
+                    break;
+                }
+
+                nota_index = 0;
+                placar = 0;
+                consecutivas = 0;
+                multiplicador = 1;
+
+                init_time = frame * 5;
+                start_music = 0;
+                pause_time = 0;
+                notas_faltando = 1;
             }
             else
             {
-                s8 key_pressed = 0;
-                if (pad0 & KEY_DOWN)
+                if (frame * 5 - init_time >= delay && !start_music)
                 {
-                    sprite_y++;
-                    key_pressed = 1;
-                }
-                else if (pad0 & KEY_UP)
-                {
-                    sprite_y--;
-                    key_pressed = 1;
-                }
-                if (pad0 & KEY_RIGHT)
-                {
-                    sprite_x++;
-                    key_pressed = 1;
-                }
-                else if (pad0 & KEY_LEFT)
-                {
-                    sprite_x--;
-                    key_pressed = 1;
-                }
-                if (pad0 & KEY_A)
-                {
-                    sprite_offset++;
-                    key_pressed = 1;
-                }
-                if (pad0 & KEY_B)
-                {
-                    sprite_offset--;
-                    key_pressed = 1;
-                }
-                nota.x = sprite_x;
-                nota.y = sprite_y;
-                if (key_pressed == 1)
-                {
-                    if (sprite_y > 20)
-                    {
+                    // XGM_startPlay(musica_xgm);
+                    // XGM_setLoopNumber(loops);
 
-                        SPR_changeFrame(&nota, 0, 0x4000);
+                    start_music = 1;
+                }
+                while (notas_faltando && (frame * 5 - init_time >= tempos[nota_index]))
+                {
+                    if (notas[nota_index] & AMARELA)
+                    {
+                        Insere_Nota(SPR_add(AMARELO_X_INICIO, ALTURA_PISTA, TILE_ATTR(1, 2, 0, 0), &bt_f1_gfx), AMARELO_X_INICIO, ALTURA_PISTA, AMARELA);
+                        // if (duracoes[nota_index] > 0)
+                        // {
+                        //     Insere_Barra(SPR_addSprite(&barraY, AMARELO_B_X, ALTURA_PISTA, TILE_ATTR(PAL2, FALSE, FALSE, FALSE)), AMARELO_B_X_INICIO, ALTURA_PISTA, AMARELA, duracoes[nota_index]);
+                        // }
+                    }
+                    else if (notas[nota_index] & VERDE)
+                    {
+                        Insere_Nota(SPR_add(VERDE_X, ALTURA_PISTA, TILE_ATTR(0, 2, 0, 0), &bt_f1_gfx), VERDE_X, ALTURA_PISTA, VERDE);
+                        // if (duracoes[nota_index] > 0)
+                        // {
+                        //     Insere_Barra(SPR_addSprite(&barraG, VERDE_B_X, ALTURA_PISTA, TILE_ATTR(PAL2, FALSE, FALSE, FALSE)), VERDE_B_X, ALTURA_PISTA, VERDE, duracoes[nota_index]);
+                        // }
+                    }
+                    else if (notas[nota_index] & VEMELHA)
+                    {
+                        Insere_Nota(SPR_add(VEMELHO_X_INICIO, ALTURA_PISTA, TILE_ATTR(2, 2, 0, 0), &bt_f1_gfx), VEMELHO_X_INICIO, ALTURA_PISTA, VEMELHA);
+                        // if (duracoes[nota_index] > 0)
+                        // {
+                        //     Insere_Barra(SPR_addSprite(&barraR, VEMELHO_B_X, ALTURA_PISTA, TILE_ATTR(PAL2, FALSE, FALSE, FALSE)), VEMELHO_B_X_INICIO, ALTURA_PISTA, VEMELHA, duracoes[nota_index]);
+                        // }
+                    }
+                    if (nota_index < tamanho_musica - 1)
+                    {
+                        nota_index++;
+                        consoleNocashMessage("nota indexx %d de %d \n", nota_index, tamanho_musica - 1);
                     }
                     else
                     {
-                        SPR_changeFrame(&nota, 1, 0x4000);
+                        notas_faltando = 0;
+                        final_time = frame * 5;
+                        break;
                     }
+                }
+                if (notas_faltando)
+                {
+                    atualizaPosicao_Nota(velocidade, 0);
+                    SPR_update();
+                    doDMAQUEUE = TRUE;
                 }
             }
             break;
         }
-
         WaitForVBlank();
+        if (doDMAQUEUE)
+        {
+            oamVramQueueUpdate();
+            doDMAQUEUE = FALSE;
+        }
+        frame++;
     }
     return 0;
 }

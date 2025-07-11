@@ -70,23 +70,39 @@ bg_musica_patterns_end:
 
 .ends
 
+.section ".rodata5" superfree
+
+vu2_patterns:
+.incbin "res/bt/vu-2.pic"
+vu2_patterns_end:
+
+vu2_palette:
+.incbin "res/bt/vu-2.pal"
+vu2_palette_end:
+
+vu2_map:
+.incbin "res/bt/vu-2.map"
+vu2_map_end:
+
+.ends
+
 
 .section ".bts" superfree
 
 bt_f1_gfx:
-.incbin "res/bt/bt_frame1.pic"
+.incbin "res/bt/bt32x32.pic"
 bt_f1_gfx_end:
 
 bt_f1_pal:
-.incbin "res/bt/bt_frame1.pal"
+.incbin "res/bt/bt32x32.pal"
 bt_f1_pal_end:
 
-bt_f2_gfx:
-.incbin "res/bt/bt_frame2.pic"
-bt_f2_gfx_end:
-
 bt_f2_pal:
-.incbin "res/bt/bt_frame2.pal"
+.incbin "res/bt/amarelo.pal"
 bt_f2_pal_end:
+
+bt_f3_pal:
+.incbin "res/bt/vermelho.pal"
+bt_f3_pal_end:
 
 .ends

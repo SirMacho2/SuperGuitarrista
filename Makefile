@@ -17,32 +17,41 @@ clean: cleanBuildRes cleanRom cleanGfx
 #---------------------------------------------------------------------------------
 k7.pic: res/bg/k7-d.png
 	@echo convert bitmap ... $(notdir $@)
-	$(GFXCONV) -pc16 -po16 -n -gs8 -pe0 -gb -fpng -m $<
+	$(GFXCON V) -u 16 -o 16  -s 8 -e 0 -m -i $<
 
 creditos.pic: res/bg/creditos-2.png
 	@echo convert bitmap ... $(notdir $@)
-	$(GFXCONV) -pc16 -po16 -n -gs8 -pe0 -gb -fpng -m $<
+	$(GFXCON V) -u 16 -o 16 -s 8 -e 0 -m -i $<
 
 concert.pic: res/bg/concert-2.png
 	@echo convert bitmap ... $(notdir $@)
-	$(GFXCONV) -pc16 -po16 -n -gs8 -pe0 -gb -fpng -m $<
+	$(GFXCON V) -u 16 -o 16 -s 8 -e 0 -m -i $<
 
 bg_musica.pic: res/bg/bg_musica-2.png
 	@echo convert bitmap ... $(notdir $@)
-	$(GFXCONV) -pc16 -po16 -n -gs8 -pe0 -gb -fpng -m $<
+	$(GFXCON V) -u 16 -o 16  -s 8 -e 0   -m -i $<
+
+vu-2.pic: res/bt/vu-2.png
+	@echo convert bitmap ... $(notdir $@)
+	$(GFXCON V) -u 16 -o 16  -s 8 -e 0   -m -ip $<
 
 pvsneslibfont.pic: pvsneslibfont.png
 	@echo convert font with no tile reduction ... $(notdir $@)
-	$(GFXCONV) -n -gs8 -po16 -pc16 -pe2 -mR! -m! -fpng $<
+	$(GFXCONV) -s 8 -o 16 -u 16 -e 0 -p -m -i $<
 
-bt_f1.pic: res/bt/bt_frame1.png
+bt32x32.pic: res/bt/bt32x32.png
 	@echo convert bitmap ... $(notdir $@)
-	$(GFXCONV) -gs16 -pc16 -po16 -n -fpng $<
+	$(GFXCONV) -gs 32 -u 16 -o 16 -i $<
 
-bt_f2.pic: res/bt/bt_frame2.png
+amarelo.pic: res/bt/amarelo.png
 	@echo convert bitmap ... $(notdir $@)
-	$(GFXCONV) -gs16 -pc16 -po16 -n -fpng $<
+	$(GFXCONV) -gs 32 -u 16 -o 16 -i $<
+
+vermelho.pic: res/bt/vermelho.png
+	@echo convert bitmap ... $(notdir $@)
+	$(GFXCONV) -gs 32 -u 16 -o 16 -i $<
 
 
-bitmaps : creditos.pic k7.pic concert.pic bg_musica.pic pvsneslibfont.pic bt_f1.pic bt_f2.pic
+
+bitmaps : creditos.pic k7.pic concert.pic bg_musica.pic vu-2.pic pvsneslibfont.pic bt32x32.pic amarelo.pic vermelho.pic
 
